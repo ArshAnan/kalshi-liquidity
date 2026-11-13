@@ -1,0 +1,16 @@
+series_ticker,category,why
+KXHIGHNY,Climate and Weather,daily NYC high temp; LIP ran until 2026-10-29 then stopped -> on/off natural experiment; info arrives at NWS prints
+KXRAIN,Climate and Weather,daily rain; LIP until 2026-10-29 (on/off experiment)
+KXAAAGASD,Economics,daily gas price; LIP until 2026-10-28 (on/off experiment); slow information
+KXCPIYOY,Economics,monthly CPI YoY; LIP active; information arrives in one lump at 8:30 ET release
+KXFEDDECISION,Economics,Fed decision; scheduled lumpy information event
+KXGOLD15M,Commodities,15-minute gold; LIP until 2026-09-19; tied to a reference price we can pull (spot gold)
+KXBTCD,Crypto,hourly BTC above/below; heavy volume; reference price = BTC spot; no LIP (control)
+KXBTC15M,Crypto,15-minute BTC; highest-volume series; LIP ended 2026-05-12 (older history via /historical)
+KXRT,Entertainment,Rotten Tomatoes scores; biggest LIP spender (~$17k/day active)
+KXYTVIEWSW,Entertainment,weekly YouTube views; LIP active; wide spreads
+KXTRUMPACT,Politics,weekly Trump actions; LIP active
+KXHORMUZWEEKLY,Politics,weekly geopolitics; LIP active
+KXLLM1,Science and Technology,top LLM ranking; LIP active
+KXNFLGAME,Sports,NFL game winner; game-end information; no LIP (control)
+KXNBAGAME,Sports,NBA game winner; game-end information; no LIP (control)

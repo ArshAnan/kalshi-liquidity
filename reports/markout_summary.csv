@@ -1,0 +1,2 @@
+series_ticker,lip_on,n_trades,contracts,notional_usd,avg_quoted_spread_c,eff_half_spread_c,as_1m_c,as_5m_c,as_15m_c,as_60m_c,as_240m_c,realized_5m_c,pnl_to_settle_c,taker_fee_c,maker_fee_c
+KXHIGHNY,False,107611,1597236.8,628832.358,1.896,2.127,1.638,2.093,2.021,2.362,2.338,0.306,0.786,1.477,1.0
