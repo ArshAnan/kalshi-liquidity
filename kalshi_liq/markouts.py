@@ -32,14 +32,19 @@ MAX_SPREAD = 0.25  # ignore quotes wider than this when forming the mid
 
 
 def taker_fee(p: np.ndarray) -> np.ndarray:
-    """Kalshi taker fee per contract: ceil(0.07 * P * (1-P) * 100) / 100."""
-    return np.ceil(np.round(0.07 * p * (1 - p) * 100, 6)) / 100
+    """Kalshi taker fee per contract, 0.07 * P * (1-P).
+
+    Kalshi charges ceil(0.07 * C * P * (1-P)) rounded up to the cent per ORDER of C
+    contracts, so per contract the unrounded value is the right average. Rounding up
+    per contract would overstate fees (e.g. 0.44c -> 1c)."""
+    return 0.07 * p * (1 - p)
 
 
 def maker_fee(p: np.ndarray) -> np.ndarray:
-    """Maker fee on series with fee_type 'quadratic_with_maker_fees' (0.0175 coefficient).
-    Treat as an assumption until checked against Kalshi's current fee schedule."""
-    return np.ceil(np.round(0.0175 * p * (1 - p) * 100, 6)) / 100
+    """Maker fee per contract on series with fee_type 'quadratic_with_maker_fees',
+    0.0175 * P * (1-P), same per-order rounding note as taker_fee.
+    Treat the coefficient as an assumption until checked against Kalshi's fee schedule."""
+    return 0.0175 * p * (1 - p)
 
 
 def lip_windows() -> pd.DataFrame:

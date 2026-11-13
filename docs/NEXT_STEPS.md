@@ -26,6 +26,39 @@ we can use: every trade with **who was the aggressor**, plus **1‑minute best b
 That is enough for effective spread, markouts and adverse selection. It is **not** enough for
 sub‑minute markouts or queue position. For those we snapshot books going forward.
 
+### First results (Nov 13, preliminary: 8 series, ~1.8M trades, Oct 14 → Nov 13)
+
+From `reports/markout_summary.csv` and `reports/markout_curves.png`. Cents per contract,
+maker's side, contract-weighted. "LIP $/contract" = LIP dollars paid on those markets in
+the window ÷ contracts traded while LIP was on. It is the whole maker pool's subsidy
+per contract traded, not one maker's take.
+
+| Series | LIP | Realized spread @5m | P&L held to settlement | Maker fee | LIP $/contract |
+|---|---|---|---|---|---|
+| KXRT (Rotten Tomatoes) | on | −0.49 | −0.56 | 0.16 | **3.39** |
+| KXTRUMPACT | on | −2.22 | −3.89 | 0.15 | **4.38** |
+| KXYTVIEWSW | on | +1.02 | −2.11 | 0.05 | **2.90** |
+| KXCPIYOY | on | +0.95 | −0.12 | 0.21 | 0.78 |
+| KXAAAGASD | on / off | +0.29 / **−0.98** | +0.88 / **−1.61** | 0.12 | 0.31 |
+| KXRAIN | on / off | +0.55 / +0.26 | +0.19 / +0.68 | 0.22 | 0.19 |
+| KXHIGHNY | on / off | +0.44 / +0.63 | +0.52 / +1.37 | 0.20 | 0.07 |
+| KXFEDDECISION | off | −0.04 | −1.78 | 0.23 | — |
+
+What this suggests (to be tested properly, with CIs):
+- **Where LIP spending is heavy (entertainment, politics), makers lose to adverse selection and
+  the subsidy is several times bigger than the loss.** That is the likely headline:
+  in these markets the incentive is the business, not the spread.
+- **Where LIP is thin (weather, gas), the spread roughly pays for itself.** Daily gas is the
+  one series where the maker went from positive to negative after LIP switched off. That's
+  the before/after comparison to push on.
+- Fed: the spread is almost exactly eaten by markouts, and held to settlement the maker loses.
+  This is the information-event pattern from the hypothesis.
+
+**Caveats.** With 1‑minute quotes, effective spread and 1‑minute markouts both include
+price moves inside the minute; realized spread (their difference) is the more reliable
+number. Large sweeps dominate contract weighting. Small cells (CPIYOY off: 170 trades;
+KXRT off: 3.2k trades) are noise. The maker fee coefficient is still unverified (§6).
+
 ## 2. The study, re-centered on the Liquidity Incentive Program
 
 The program ([rules](https://help.kalshi.com/en/articles/13823851-liquidity-incentive-program),

@@ -77,6 +77,15 @@ def markets_frame(markets: list[dict], series: str) -> pd.DataFrame:
     return df
 
 
+def _readable(p: Path) -> bool:
+    """False for a file left half-written by an interrupted run, so it gets refetched."""
+    try:
+        pd.read_parquet(p, columns=[])
+        return True
+    except Exception:
+        return False
+
+
 def backfill_series(c: KalshiClient, series: str, start: datetime, end: datetime, force: bool) -> None:
     t0 = time.time()
     s_ts, e_ts = int(start.timestamp()), int(end.timestamp())
@@ -105,7 +114,7 @@ def backfill_series(c: KalshiClient, series: str, start: datetime, end: datetime
     n_tr = 0
     for i, m in enumerate(todo.itertuples(index=False), 1):
         tp, cp = tdir / f"{m.ticker}.parquet", cdir / f"{m.ticker}.parquet"
-        if tp.exists() and cp.exists() and not force:
+        if tp.exists() and cp.exists() and not force and _readable(tp) and _readable(cp):
             continue
         tr = trades_frame(c.trades(m.ticker))
         tr.to_parquet(tp, index=False)
