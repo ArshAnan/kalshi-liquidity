@@ -26,23 +26,38 @@ we can use: every trade with **who was the aggressor**, plus **1‑minute best b
 That is enough for effective spread, markouts and adverse selection. It is **not** enough for
 sub‑minute markouts or queue position. For those we snapshot books going forward.
 
-### First results (Nov 13, preliminary: 8 series, ~1.8M trades, Oct 14 → Nov 13)
+### First results (Nov 14, preliminary: all 15 series, ~48M trades)
 
+Window: markets closing Oct 14 → Nov 13 (15-minute and daily BTC: Nov 11 → Nov 13 only).
 From `reports/markout_summary.csv` and `reports/markout_curves.png`. Cents per contract,
-maker's side, contract-weighted. "LIP $/contract" = LIP dollars paid on those markets in
+maker's side, contract-weighted. "LIP ¢/contract" = LIP dollars paid on those markets in
 the window ÷ contracts traded while LIP was on. It is the whole maker pool's subsidy
 per contract traded, not one maker's take.
 
-| Series | LIP | Realized spread @5m | P&L held to settlement | Maker fee | LIP $/contract |
-|---|---|---|---|---|---|
-| KXRT (Rotten Tomatoes) | on | −0.49 | −0.56 | 0.16 | **3.39** |
-| KXTRUMPACT | on | −2.22 | −3.89 | 0.15 | **4.38** |
-| KXYTVIEWSW | on | +1.02 | −2.11 | 0.05 | **2.90** |
-| KXCPIYOY | on | +0.95 | −0.12 | 0.21 | 0.78 |
-| KXAAAGASD | on / off | +0.29 / **−0.98** | +0.88 / **−1.61** | 0.12 | 0.31 |
-| KXRAIN | on / off | +0.55 / +0.26 | +0.19 / +0.68 | 0.22 | 0.19 |
-| KXHIGHNY | on / off | +0.44 / +0.63 | +0.52 / +1.37 | 0.20 | 0.07 |
-| KXFEDDECISION | off | −0.04 | −1.78 | 0.23 | — |
+| Series | LIP | Trades | Quoted spread | Realized spread @5m | P&L held to settlement | Maker fee | LIP ¢/contract |
+|---|---|---|---|---|---|---|---|
+| KXRT (Rotten Tomatoes) | on | 120k | 1.62 | −0.49 | −0.56 | 0.16 | **3.39** |
+| KXTRUMPACT | on | 4.8k | 2.96 | −2.22 | −3.89 | 0.15 | **4.38** |
+| KXYTVIEWSW | on | 13.7k | 5.20 | +1.02 | −2.11 | 0.05 | **2.90** |
+| KXHORMUZWEEKLY | on | 5.6k | 1.43 | −0.35 | −2.72 | 0.13 | **2.68** |
+| KXLLM1 | on | 19k | 1.64 | −0.08 | −0.10 | 0.13 | 0.92 |
+| KXCPIYOY | on | 13.5k | 1.83 | +0.95 | −0.12 | 0.21 | 0.78 |
+| KXAAAGASD | on / off | 61k / 39k | 1.76 / 1.45 | +0.29 / **−0.98** | +0.88 / **−1.61** | 0.12 | 0.31 |
+| KXRAIN | on / off | 642k / 550k | 1.91 / 1.78 | +0.55 / +0.26 | +0.19 / +0.68 | 0.22 | 0.19 |
+| KXHIGHNY | on / off | 71k / 184k | 1.99 / 2.01 | +0.44 / +0.63 | +0.52 / +1.37 | 0.20 | 0.07 |
+| KXFEDDECISION | off | 44k | 1.09 | −0.04 | −1.78 | 0.23 | — |
+| KXNBAGAME | off | 8.6M | 1.09 | +0.20 | +0.49 | 0.29 | — |
+| KXNFLGAME | off | 8.1M | 1.06 | −0.04 | +1.51 | 0.29 | — |
+| KXBTCD (hourly BTC) | off | 1.9M | 1.07 | +0.07 | +0.35 | 0.25 | — |
+| KXBTC15M ⚠️ | off | 12.7M | 0.62 | +0.08 | +0.19 | 0.19 | — |
+| KXGOLD15M ⚠️ | off | 12.6M | 0.68 | +0.21 | +0.21 | 0.19 | — |
+
+⚠️ **The 15‑minute series are too fast for 1‑minute quotes.** Their effective spread comes
+out negative (BTC −0.82¢, gold −0.30¢) because most trades happen 15–60s after the last
+quote, after price has already moved. On KXBTC15M trades with a quote under 5s old give
++0.16¢ (half-spread 0.29¢), as expected; trades with a 15–60s-old quote give −1.08¢.
+Treat these rows as placeholders until we have sub-minute books. **This is the strongest
+reason to get the live logger running.**
 
 What this suggests (to be tested properly, with CIs):
 - **Where LIP spending is heavy (entertainment, politics), makers lose to adverse selection and
@@ -53,11 +68,14 @@ What this suggests (to be tested properly, with CIs):
   the before/after comparison to push on.
 - Fed: the spread is almost exactly eaten by markouts, and held to settlement the maker loses.
   This is the information-event pattern from the hypothesis.
+- **Unsubsidized high-volume markets (NBA, NFL, hourly BTC) are close to break-even**:
+  realized spread −0.04 to +0.20¢ against a 0.25–0.29¢ maker fee (if that coefficient is
+  right). With no LIP, market making there looks marginal at best for the average maker.
 
 **Caveats.** With 1‑minute quotes, effective spread and 1‑minute markouts both include
 price moves inside the minute; realized spread (their difference) is the more reliable
-number. Large sweeps dominate contract weighting. Small cells (CPIYOY off: 170 trades;
-KXRT off: 3.2k trades) are noise. The maker fee coefficient is still unverified (§6).
+number. Large sweeps dominate contract weighting. Small groups are noise and are left out of
+the table: CPIYOY off (170 trades), KXRT off (3.2k), KXHORMUZWEEKLY off (67). The maker fee coefficient is still unverified (§6).
 
 ## 2. The study, re-centered on the Liquidity Incentive Program
 

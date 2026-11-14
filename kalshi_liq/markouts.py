@@ -1,7 +1,7 @@
 """Maker-side markouts for every public Kalshi trade, from backfilled trades + 1-minute candles.
 
 Usage:  python -m kalshi_liq.markouts
-  -> data/derived/fills_with_markouts.parquet   one row per trade
+  -> data/derived/fills_with_markouts/{series}.parquet   one row per trade
   -> reports/markout_summary.csv                per series x LIP on/off
   -> reports/markout_curves.png
 
@@ -141,9 +141,10 @@ def plot(summary: pd.DataFrame, path: Path) -> None:
     import matplotlib.pyplot as plt
     fig, ax = plt.subplots(figsize=(10, 6))
     xs = [0] + HORIZONS_MIN
-    for _, r in summary.sort_values("contracts", ascending=False).head(14).iterrows():
+    colors = plt.get_cmap("tab20").colors
+    for i, (_, r) in enumerate(summary.sort_values("contracts", ascending=False).head(14).iterrows()):
         ys = [r.eff_half_spread_c] + [r.eff_half_spread_c - r[f"as_{h}m_c"] for h in HORIZONS_MIN]
-        ax.plot(range(len(xs)), ys, marker="o", lw=1.4,
+        ax.plot(range(len(xs)), ys, marker="o", lw=1.4, color=colors[i % len(colors)],
                 ls="-" if r.lip_on else "--", label=f"{r.series_ticker}{' (LIP)' if r.lip_on else ''}")
     ax.axhline(0, color="grey", lw=0.8)
     ax.set_xticks(range(len(xs)), ["trade"] + [f"{h}m" for h in HORIZONS_MIN])
@@ -163,7 +164,9 @@ def main() -> None:
     lip = lip_windows()
 
     series = a.series or sorted(Path(p).stem for p in glob.glob(str(RAW / "markets" / "*.parquet")))
-    out = []
+    fdir = DERIVED / "fills_with_markouts"
+    fdir.mkdir(parents=True, exist_ok=True)
+    summaries = []
     for s in series:
         mk = pd.read_parquet(RAW / "markets" / f"{s}.parquet").set_index("ticker")
         parts = []
@@ -179,13 +182,20 @@ def main() -> None:
         df = pd.concat(parts, ignore_index=True)
         df.insert(0, "series_ticker", s)
         df["lip_on"] = tag_lip(df, lip)
-        out.append(df)
+        # one file per series: 48M trades x 30 columns does not fit in RAM as one frame
+        df.to_parquet(fdir / f"{s}.parquet", index=False)
+        summaries.append(summarize(df))
         print(f"{s}: {len(df):,} trades, {df.mid_t.notna().mean():.0%} with a valid prior mid, "
               f"{df.lip_on.mean():.0%} during LIP")
-    f = pd.concat(out, ignore_index=True)
-    f.to_parquet(DERIVED / "fills_with_markouts.parquet", index=False)
-    summ = summarize(f)
-    summ.to_csv(REPORTS / "markout_summary.csv", index=False)
+        del df, parts
+    # keep summaries for series not rerun this time
+    old = REPORTS / "markout_summary.csv"
+    summ = pd.concat(summaries, ignore_index=True)
+    if old.exists():
+        prev = pd.read_csv(old)
+        summ = pd.concat([prev[~prev.series_ticker.isin(summ.series_ticker)], summ], ignore_index=True)
+    summ = summ.sort_values(["series_ticker", "lip_on"]).reset_index(drop=True)
+    summ.to_csv(old, index=False)
     plot(summ, REPORTS / "markout_curves.png")
     pd.set_option("display.width", 250)
     print(summ.to_string(index=False))

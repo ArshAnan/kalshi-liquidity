@@ -33,22 +33,26 @@ class KalshiClient:
     # ---- low level -------------------------------------------------------
     def get(self, path: str, **params) -> dict:
         params = {k: v for k, v in params.items() if v is not None}
-        for attempt in range(8):
+        last_err = None
+        # ~15 min of retries in total, so a Wi-Fi drop or short API outage doesn't kill a long backfill
+        for attempt in range(20):
             wait = self.min_gap - (time.monotonic() - self._last)
             if wait > 0:
                 time.sleep(wait)
             self._last = time.monotonic()
             try:
                 r = self.s.get(BASE + path, params=params, timeout=self.timeout)
-            except requests.RequestException:
-                time.sleep(2**attempt)
+            except requests.RequestException as e:
+                last_err = repr(e)
+                time.sleep(min(60, 2**attempt))
                 continue
             if r.status_code == 429 or r.status_code >= 500:
+                last_err = f"HTTP {r.status_code}"
                 time.sleep(min(60, 2**attempt))
                 continue
             r.raise_for_status()
             return r.json()
-        raise RuntimeError(f"gave up on {path} {params}")
+        raise RuntimeError(f"gave up on {path} {params}: last error {last_err}")
 
     def paginate(self, path: str, key: str, limit: int = 1000, **params) -> Iterator[dict]:
         cursor = None

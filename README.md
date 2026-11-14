@@ -60,7 +60,7 @@ kalshi_liq/client.py       REST client: rate limit, retries, pagination, live+hi
 kalshi_liq/incentives.py   LIP reward periods → data/incentives/
 kalshi_liq/universe.py     series ranking → data/universe_candidates.csv
 kalshi_liq/backfill.py     markets/trades/candles → data/raw/ (Parquet, one file per market)
-kalshi_liq/markouts.py     fills_with_markouts + reports/markout_summary.csv + chart
+kalshi_liq/markouts.py     data/derived/fills_with_markouts/{series}.parquet + summary CSV + chart
 kalshi_liq/lip.py          LIP score calculator + order-book snapshotter
 docs/NEXT_STEPS.md         plan, roles, gates
 ```
